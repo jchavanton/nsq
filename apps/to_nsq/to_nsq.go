@@ -15,7 +15,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/nsqio/go-nsq"
+	"go-nsq"
 	"github.com/nsqio/nsq/internal/app"
 	"github.com/nsqio/nsq/internal/version"
 )
