@@ -40,6 +40,7 @@ var (
 	topic       = flag.String("topic", "", "nsq topic")
 	channel     = flag.String("channel", "nsq_to_http", "nsq channel")
 	maxInFlight = flag.Int("max-in-flight", 200, "max number of messages to allow in flight")
+	maxPerSecond = flag.Int("max-per-second", 500, "max number of messages to allow per second")
 
 	numPublishers      = flag.Int("n", 100, "number of concurrent publishers")
 	mode               = flag.String("mode", "hostpool", "the upstream request mode options: round-robin, hostpool (default), epsilon-greedy")
@@ -86,6 +87,10 @@ func (ph *PublishHandler) HandleMessage(m *nsq.Message) error {
 	if *sample < 1.0 && rand.Float64() > *sample {
 		return nil
 	}
+	// sleep
+	fmt.Printf("nsq_to_http max_per_second: sleeping ...\n")
+	time.Sleep(1 * time.Second)
+	fmt.Printf("nsq_to_http max_per_second: sleeping done\n")
 
 	startTime := time.Now()
 	switch ph.mode {
@@ -179,7 +184,7 @@ func main() {
 	httpclient = &http.Client{Transport: http_api.NewDeadlineTransport(*httpConnectTimeout, *httpRequestTimeout), Timeout: *httpRequestTimeout}
 
 	if *showVersion {
-		fmt.Printf("nsq_to_http v%s\n", version.Binary)
+		fmt.Printf("nsq_to_http >> v%s\n", version.Binary)
 		return
 	}
 
@@ -249,6 +254,7 @@ func main() {
 
 	cfg.UserAgent = fmt.Sprintf("nsq_to_http/%s go-nsq/%s", version.Binary, nsq.VERSION)
 	cfg.MaxInFlight = *maxInFlight
+	// cfg.MaxPerSecond = *maxPerSecond
 
 	consumer, err := nsq.NewConsumer(*topic, *channel, cfg)
 	if err != nil {
